@@ -1,5 +1,4 @@
 #include <iostream>
-#include <string>
 #include "mailbox_processor.h"
 
 enum class Command { Greet, Count, Quit };
@@ -19,6 +18,7 @@ int main() {
     agent.start([&count](MailboxProcessor<Command>& inbox) -> AgentTask {
         while (inbox.is_active()) {
             auto msg = co_await inbox.receive();
+
             switch (msg) {
                 case Command::Greet:
                     std::cout << "Hello!" << std::endl;

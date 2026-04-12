@@ -37,6 +37,7 @@ class MailboxProcessor {
     bool _active = false;
     std::exception_ptr _error;
     std::function<void(std::exception_ptr)> _on_error;
+    std::function<AgentTask(MailboxProcessor<T>&)> _body;
 
     void do_enqueue(std::function<void()> task) {
         if (_pool) _pool->enqueue(std::move(task));
@@ -53,9 +54,10 @@ public:
     MailboxProcessor& operator=(MailboxProcessor&&) = delete;
 
     void start(std::function<AgentTask(MailboxProcessor<T>&)> body) {
+        _body = body;
         _active = true;
-        do_enqueue([this, body = std::move(body)]() {
-            auto task = body(*this);
+        do_enqueue([this]() {
+            auto task = _body(*this);
             task.handle.promise().on_error = [this](std::exception_ptr e) {
                 _active = false;
                 _error = e;
